@@ -329,6 +329,11 @@ endfun
 
 fun! lichess#play#find_game(...) abort
     " required api token
+    if exists('g:_lichess_start_max_tries') && g:_lichess_start_max_tries > 5
+        echohl ErrorMsg | echom "Could not start game! Try again in a minute" | echohl None
+        return
+    endif
+
     let g:lichess_api_token = get(g:, 'lichess_api_token', "") 
     if !len(g:lichess_api_token)
         echohl ErrorMsg | echom "No API Token found! You need to add `let g:lichess_api_token = YOUR_API_TOKEN` to your vim config using your generated Token!" |
@@ -387,9 +392,13 @@ fun! lichess#play#find_game(...) abort
     if !a:0
         call lichess#setup_mappings()
         syn clear lichess_searching_game
-        syn match lichess_searching_game /Searching for game...|Retrying.../
+        syn match lichess_searching_game /Searching for game...\|Retrying.../
         call append(0, ["Searching for game..."])
     else
+        if !exists('g:_lichess_start_max_tries')
+            let g:_lichess_start_max_tries = 0
+        endif
+        let g:_lichess_start_max_tries += 1
         call append(0, ["Retrying..."])
     endif
 endfun
@@ -402,6 +411,9 @@ fun! lichess#play#update_board(...) abort
         call lichess#util#log_msg('function lichess#play#find_game had to be restarted', 1)
         call lichess#play#find_game(1)
         return
+    endif
+    if exists('g:_lichess_start_max_tries')
+        unlet g:_lichess_start_max_tries
     endif
 
 	if all_info == 'None'
@@ -526,7 +538,7 @@ fun! lichess#play#update_board(...) abort
 
     if searching_game && status != 'started'
         syn clear lichess_searching_game
-        syn match lichess_searching_game /Searching for game...|Retrying.../
+        syn match lichess_searching_game /Searching for game...\|Retrying.../
         call append(0, ["Searching for game...", "", ""])
     endif
 
