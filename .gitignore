@@ -1,0 +1,6 @@
+.jukit/
+mylichesstoken.py
+fen_test_cases.py
+log/
+__pycache__
+.debug_level
