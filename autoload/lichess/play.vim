@@ -387,7 +387,7 @@ fun! lichess#play#find_game(...) abort
     if !a:0
         call lichess#setup_mappings()
         syn clear lichess_searching_game
-        syn match lichess_searching_game /Searching for game.../
+        syn match lichess_searching_game /Searching for game...|Retrying.../
         call append(0, ["Searching for game..."])
     else
         call append(0, ["Retrying..."])
@@ -526,7 +526,7 @@ fun! lichess#play#update_board(...) abort
 
     if searching_game && status != 'started'
         syn clear lichess_searching_game
-        syn match lichess_searching_game /Searching for game.../
+        syn match lichess_searching_game /Searching for game...|Retrying.../
         call append(0, ["Searching for game...", "", ""])
     endif
 
