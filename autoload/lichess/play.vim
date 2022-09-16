@@ -329,7 +329,7 @@ fun! lichess#play#make_move_keyboard() abort
 endfun
 
 
-fun! lichess#play#find_game() abort
+fun! lichess#play#find_game(...) abort
     " required api token
     let g:lichess_api_token = get(g:, 'lichess_api_token', "") 
     if !len(g:lichess_api_token)
@@ -361,6 +361,13 @@ fun! lichess#play#find_game() abort
         setlocal shortmess+=A
         edit newgame.chess | setlocal buftype=nofile
         exe 'setlocal shortmess=' . shortmess_val
+
+        if hlexists('Visual')
+            let vis_setting = substitute(trim(execute('hi Visual'), "\n"), '\s*xxx\s*', ' ', '')
+            hi clear Visual
+            exe "au BufLeave <buffer> :exe 'hi ' . '" . vis_setting . "'"
+            au BufEnter <buffer> :hi clear Visual
+        endif
     endif
 
     let rated = g:lichess_rated ? "True" : "False"
@@ -376,17 +383,21 @@ fun! lichess#play#find_game() abort
     endif
     call s:check_for_query_error(response)
 
-    call lichess#setup_mappings()
-    syn clear lichess_searching_game
-    syn match lichess_searching_game /Searching for game.../
-    call append(0, ["Searching for game..."])
+    if !a:0
+        call lichess#setup_mappings()
+        syn clear lichess_searching_game
+        syn match lichess_searching_game /Searching for game.../
+        call append(0, ["Searching for game..."])
+    endif
 endfun
 
 
 fun! lichess#play#update_board(...) abort
 	let all_info = s:query_server('get_all_info')
     if s:check_for_query_error(all_info)
-        echohl ErrorMsg | echom "Error getting game info" | echohl None
+        sleep 1
+        call lichess#util#log_msg('function lichess#play#find_game had to be restarted', 1)
+        call lichess#play#find_game(1)
         return
     endif
 
@@ -439,7 +450,7 @@ fun! lichess#play#update_board(...) abort
 
 	call lichess#board_setup#display_board(s:lichess_fen, latest_move) " DISPLAY BOARD
 
-	if player_info != "None"
+	if player_info != "None" && player_times != "None"
 		let player_info = split(player_info, msg_sep)
 
 		let my_rating = player_info[0]
