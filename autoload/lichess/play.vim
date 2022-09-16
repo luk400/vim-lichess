@@ -290,27 +290,25 @@ endfun
 
 
 fun! lichess#play#make_move(pos_end) abort
-    if !exists('b:lichess_pos_init')
+    if !exists('b:lichess_pos_init') || !exists('g:lichess_current_color')
         return
     endif
 
-    let color = s:query_server('get_color')
-
-    let pos_init_idx = s:cursor_pos_to_square_pos(b:lichess_pos_init, color)
+    let pos_init_idx = s:cursor_pos_to_square_pos(b:lichess_pos_init, g:lichess_current_color)
     if type(pos_init_idx) != 3
         return
     endif
     let pos_init = s:col_idx_to_letter[pos_init_idx[1]] . pos_init_idx[0]
     unlet b:lichess_pos_init
 
-    let pos_end_idx = s:cursor_pos_to_square_pos(a:pos_end, color)
+    let pos_end_idx = s:cursor_pos_to_square_pos(a:pos_end, g:lichess_current_color)
     if type(pos_end_idx) != 3
         return
     endif
     let pos_end = s:col_idx_to_letter[pos_end_idx[1]] . pos_end_idx[0]
 
     let move_uci = pos_init . pos_end
-    if !g:lichess_autoqueen && s:is_promotion(color, pos_init_idx, pos_end_idx)
+    if !g:lichess_autoqueen && s:is_promotion(g:lichess_current_color, pos_init_idx, pos_end_idx)
         call lichess#util#log_msg('function lichess#play#make_move: pawn is promoting!', 1)
         let promotion_pieces = ['q', 'r', 'n', 'b']
         let new_piece = confirm("Choose promotion piece!", "&queen\n&rook\nk&night\n&bishop", 1)
@@ -364,9 +362,12 @@ fun! lichess#play#find_game(...) abort
 
         if hlexists('Visual')
             let vis_setting = substitute(trim(execute('hi Visual'), "\n"), '\s*xxx\s*', ' ', '')
-            hi clear Visual
-            exe "au BufLeave <buffer> :exe 'hi ' . '" . vis_setting . "'"
-            au BufEnter <buffer> :hi clear Visual
+            
+            if stridx(vis_setting, 'Visual cleared') == -1
+                hi clear Visual
+                exe "au BufLeave <buffer> :exe 'hi ' . '" . vis_setting . "'"
+                exe "au BufEnter <buffer> :hi clear Visual"
+            endif
         endif
     endif
 
@@ -388,6 +389,8 @@ fun! lichess#play#find_game(...) abort
         syn clear lichess_searching_game
         syn match lichess_searching_game /Searching for game.../
         call append(0, ["Searching for game..."])
+    else
+        call append(0, ["Retrying..."])
     endif
 endfun
 
@@ -421,6 +424,8 @@ fun! lichess#play#update_board(...) abort
         call lichess#util#log_msg('function lichess#play#update_board(): my_color is None', 1)
 		return
 	endif
+
+    let g:lichess_current_color = my_color
 
     if searching_game != 0 " could also be 'None'
         let searching_game = 1
