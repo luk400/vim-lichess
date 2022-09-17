@@ -94,7 +94,7 @@ function! s:create_board(fen, latest_move) abort
         " rn2k1r1
         for j in range(s:square_height)
             let n = 0
-            for char in str
+            for char in split(str, '\zs')
                 " r
                 let next_cell_black = fmod(i + n, 2) == 0.0
                 let is_move_cell = (i == from_row) && (n == from_column) || (i == to_row) && (n == to_column)
