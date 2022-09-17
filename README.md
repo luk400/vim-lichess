@@ -37,8 +37,8 @@ When the game is over, you can either start a new game again using `:LichessFind
 * `:LichessResign`: Resign a game
 * `:LichessAbort`: Abort a game
 * `:LichessClaimVictory`: Claim victory if opponent has abandoned the game (unfortunately there's no way to determine whether a game is "claimable" through lichess API, thus you'll just have to try by running the command when you think the opponent might've abandoned the game)
-* `:LichessDrawDecline`: Create or accept a draw offer
-* `:LichessDrawOfferAccept`: Decline a draw offer
+* `:LichessDrawOfferAccept`: Create or accept a draw offer
+* `:LichessDrawDecline`: Decline a draw offer
 * `:LichessTakebackOfferAccept`: Create or accept a takeback offer
 * `:LichessTakebackOfferDecline`: Decline a takeback offer
 * `:LichessMakeMoveUCI`: type a move to make in UCI format ([see this link for examples](https://en.wikipedia.org/wiki/Universal_Chess_Interface#Design))
