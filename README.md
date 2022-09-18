@@ -15,9 +15,8 @@ Honestly, because why not.
 ## Requirements
 
 * (Neo)Vim with python3 support
-* `berserk` package for python3 (install via `pip install berserk`)
+* `berserk` package for python3 (install via `pip install berserk`) - note in case you have the package simplejson installed: berserk seems to be incompatible with simplejson see [this comment for a possible workaround](https://github.com/luk400/vim-lichess/issues/2#issuecomment-1250392384)
 * A lichess account
-* Tested on python version 3.9.12
 
 ## Basic setup and how to play
 
