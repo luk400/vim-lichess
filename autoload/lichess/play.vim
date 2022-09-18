@@ -439,7 +439,6 @@ fun! lichess#play#update_board(...) abort
         exe "au BufEnter <buffer> call timer_pause(" . g:_lichess_timer_id . ", 0)"
         exe "au BufDelete <buffer> call timer_stop(" . g:_lichess_timer_id . ")"
         au BufDelete <buffer> call s:kill_server()
-        echom 'timer started ' . strftime("%H:%M:%S")
 
         let s:timer_started = 1
     endif

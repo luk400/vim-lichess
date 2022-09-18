@@ -17,6 +17,7 @@ Honestly, because why not.
 * (Neo)Vim with python3 support
 * `berserk` package for python3 (install via `pip install berserk`)
 * A lichess account
+* Tested on python version 3.9.12
 
 ## Basic setup and how to play
 
