@@ -328,9 +328,8 @@ endfun
 
 
 fun! lichess#play#find_game(...) abort
-    " required api token
-    if exists('g:_lichess_start_max_tries') && g:_lichess_start_max_tries > 5
-        echohl ErrorMsg | echom "Could not start game! Try again in a minute" | echohl None
+    if exists('g:_lichess_start_tries') && g:_lichess_start_tries >= 5
+        call lichess#play#update_board()
         return
     endif
 
@@ -380,7 +379,8 @@ fun! lichess#play#find_game(...) abort
     let rating_range = len(g:lichess_rating_range) ? '[' . join(g:lichess_rating_range, ',') . ']' : "None"
     let query = '<set_start_new_game>True/' . g:lichess_time . '-' . g:lichess_increment
         \ . '-' . rated . '-' . g:lichess_variant . '-' . g:lichess_color . '-' . rating_range
-    if !exists('g:_lichess_server_started')
+
+    if !exists('g:_lichess_server_started') || exists('g:_lichess_start_tries') && g:_lichess_start_tries > 0
         call s:start_game_loop()
         sleep 500m
         let response = s:query_server(query)
@@ -395,26 +395,55 @@ fun! lichess#play#find_game(...) abort
         syn match lichess_searching_game /Searching for game...\|Retrying.../
         call append(0, ["Searching for game..."])
     else
-        if !exists('g:_lichess_start_max_tries')
-            let g:_lichess_start_max_tries = 0
-        endif
-        let g:_lichess_start_max_tries += 1
-        call append(0, ["Retrying..."])
+        call append(1, ["Retrying..."])
     endif
+    
+    call lichess#play#update_board()
 endfun
 
 
 fun! lichess#play#update_board(...) abort
 	let all_info = s:query_server('get_all_info')
+
     if s:check_for_query_error(all_info)
-        sleep 1
+        if exists('g:_lichess_timer_id')
+            call timer_stop(g:_lichess_timer_id)
+            let s:timer_started = 0
+        endif
+
+        if !exists('g:_lichess_start_tries')
+            let g:_lichess_start_tries = 1
+        elseif g:_lichess_start_tries > 5
+            echohl ErrorMsg | echom "Could not start/continue game! Try again in a minute. Make sure you have a working internet connection, that you correctly specified your API token, and that your account has not been suspended/timed out on lichess.org! If the issue persists, please specify `let g:lichess_debug_level = 0` in your vim config, then try starting a new game again, and after it fails again attach the created log-file (located in " . lichess#util#plugin_path() . "/log/ to a new issue which you can create at https://github.com/luk400/vim-lichess/issues" | echohl None
+            return
+        else
+            let g:_lichess_start_tries += 1
+        endif
+
         call lichess#util#log_msg('function lichess#play#find_game had to be restarted', 1)
+        sleep 250m
         call lichess#play#find_game(1)
         return
     endif
-    if exists('g:_lichess_start_max_tries')
-        unlet g:_lichess_start_max_tries
+
+    if exists('g:_lichess_start_tries') && g:_lichess_start_tries > 0
+        let g:_lichess_start_tries = 0
     endif
+
+    if !s:timer_started
+        let updatetime = 0.5
+        let g:_lichess_timer_id = timer_start(str2nr(string(1000 * updatetime)),
+            \ function('lichess#play#update_board'), {'repeat': -1})
+
+        exe "au BufLeave <buffer> call timer_pause(" . g:_lichess_timer_id . ", 1)"
+        exe "au BufEnter <buffer> call timer_pause(" . g:_lichess_timer_id . ", 0)"
+        exe "au BufDelete <buffer> call timer_stop(" . g:_lichess_timer_id . ")"
+        au BufDelete <buffer> call s:kill_server()
+        echom 'timer started ' . strftime("%H:%M:%S")
+
+        let s:timer_started = 1
+    endif
+
 
 	if all_info == 'None'
 		return
@@ -733,15 +762,8 @@ fun! s:start_game_loop() abort
     endif
     exe "autocmd QuitPre,BufDelete <buffer> :silent! bd! " . g:lichess_server_bufnr
 
-    let updatetime = 0.5
-    let timer_id = timer_start(str2nr(string(1000 * updatetime)),
-        \ function('lichess#play#update_board'), {'repeat': -1})
-
-    exe "au BufLeave <buffer> call timer_pause(" . timer_id . ", 1)"
-    exe "au BufEnter <buffer> call timer_pause(" . timer_id . ", 0)"
-    exe "au BufDelete <buffer> call timer_stop(" . timer_id . ")"
-    au BufDelete <buffer> call s:kill_server()
     let s:hl_was_set = 0
+    let s:timer_started = 0
     call lichess#board_setup#syntax_matching()
 endfun
 

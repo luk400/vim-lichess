@@ -75,7 +75,7 @@ def is_port_in_use(port):
         return s.connect_ex((HOST, port)) == 0
 
 
-def query_server(query, port, max_tries=5):
+def query_server(query, port, max_tries=10):
     for _ in range(max_tries):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -86,7 +86,7 @@ def query_server(query, port, max_tries=5):
             return response
         except ConnectionRefusedError as e:
             log_message(f"connection refused (query: {query}): {str(e)}", 2)
-            time.sleep(0.03)
+            time.sleep(0.1)
 
     if not is_port_in_use(port):
         raise ConnectionRefusedError(f"port {port} is not in use anymore")
