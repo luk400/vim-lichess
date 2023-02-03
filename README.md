@@ -133,7 +133,7 @@ In case you don't like my piece design, you can design your own as shown below.
 You can also change their width/height (number of characters in strings/number of strings in list) to make them bigger if you want more detail, as long as you follow the following restrictions:
 * all pieces must have the same height (number of strings in piece list)
 * all pieces must have the same width (number of characters in the strings)
-* there must be exactly one unique non-whitespace character for all black and one unique non-whitespace character for all white pieces. This can not be the same for the white and black pieces and it must have a length of 1 (there are certain characters which have a different length in vim - e.g.: `echo len('║')` will print `3` even though it's a single character)
+* there must be exactly one unique non-whitespace character for all black and one unique non-whitespace character for all white pieces. This can not be the same for the white and black pieces and it must have a length of 1 (there are certain characters which have a different length in vim - e.g.: `echo len('║')` will print `3` even though it's a single character). Easiest way is just to use `,` for black and `;` for the white pieces, as shown below
 
 
 ```vim
